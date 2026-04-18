@@ -43,7 +43,7 @@ resource "azurerm_key_vault_secret" "hoop_user" {
 resource "azurerm_key_vault_secret" "hoop_pass" {
   for_each     = local.hoop_enterprise ? local.hoop_all_users : {}
   name         = lower(replace("${local.kv_prefix}-mysql-${try(each.value.username, each.key)}-hoop-pass", "/[^a-zA-Z0-9-]/", "-"))
-  value        = try(var.users[each.key].access, "owner") == "owner" ? random_password.owner[each.key].result : random_password.user[each.key].result
+  value        = try(var.users[each.key].access, "owner") == "owner" ? module.db.owner_passwords[each.key] : module.db.user_passwords[each.key]
   key_vault_id = data.azurerm_key_vault.credentials.id
   content_type = "text/plain"
   tags         = local.all_tags

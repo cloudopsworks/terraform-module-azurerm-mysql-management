@@ -17,5 +17,5 @@ output "users" {
 
 output "databases" {
   description = "Map of managed MySQL databases."
-  value       = { for k, v in mysql_database.this : k => { name = v.name } }
+  value       = module.db.databases
 }
