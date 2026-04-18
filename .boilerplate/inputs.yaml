@@ -1,1 +1,110 @@
 # Module configuration
+# All variables below are module-specific (sourced from variables-mysql.tf).
+# Variables supplied automatically by the Terragrunt hierarchy (org, spoke_def,
+# extra_tags, is_hub) are intentionally excluded.
+
+# ── Key Vault ─────────────────────────────────────────────────────────────────
+
+key_vault_name: ""                      # (Required) Name of the existing Azure Key Vault used
+                                        #   to store generated MySQL credentials and Hoop secrets.
+                                        #   Example: "kv-platform-prod"
+
+key_vault_resource_group_name: ""       # (Required) Resource group containing the Key Vault.
+                                        #   Example: "rg-platform-prod"
+
+# ── Connection: Azure MySQL Flexible Server ────────────────────────────────────
+
+azure:
+  enabled: false                        # (Optional) Enable Azure Flexible Server connection mode.
+                                        #   Default: false. When true, uses AzureRM data source
+                                        #   to resolve FQDN unless from_secret=true.
+  from_secret: false                    # (Optional) When true, reads all admin credentials from
+                                        #   a Key Vault secret (JSON bundle). Default: false.
+  secret_name: ""                       # (Required when from_secret=true) Name of the Key Vault
+                                        #   secret containing JSON: {host, port, username,
+                                        #   password, dbname}. Example: "mysql-admin-creds"
+  server_name: ""                       # (Required when enabled=true and from_secret=false)
+                                        #   Azure MySQL Flexible Server resource name.
+                                        #   Example: "mysql-prod-01"
+  resource_group_name: ""              # (Optional) Resource group of the Flexible Server.
+                                        #   Defaults to the provider subscription scope.
+  admin_username: "adminuser"           # (Optional) Admin username. Default: "adminuser".
+  admin_password: ""                    # (Optional) Admin password. Required when
+                                        #   enabled=true and from_secret=false.
+  db_name: "mysql"                      # (Optional) Default database name for the connection.
+                                        #   Default: "mysql".
+  sslmode: "true"                       # (Optional) TLS mode passed to the MySQL provider.
+                                        #   Valid values: "true", "false", "skip-verify".
+                                        #   Default: "true".
+
+# ── Connection: Hoop tunnel ────────────────────────────────────────────────────
+
+hoop:
+  enabled: false                        # (Optional) Enable Hoop tunnel connection mode.
+                                        #   Default: false. Takes precedence over direct when
+                                        #   azure.enabled=false.
+  community: true                       # (Optional) true = community (no KV secrets written,
+                                        #   hoop_connections output is null). false = enterprise
+                                        #   (per-field KV secrets written and hoop_connections
+                                        #   output populated). Default: true.
+  agent_id: ""                          # (Required when enabled=true and community=false)
+                                        #   Hoop agent UUID. Example: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+  port: 3307                            # (Optional) Local port for the Hoop tunnel.
+                                        #   Default: 3307.
+  db_name: "mysql"                      # (Optional) Database name used in the Hoop connection.
+                                        #   Default: "mysql".
+  server_name: ""                       # (Optional) Logical server name surfaced in the
+                                        #   hoop_connections output name. Default: "".
+  import: false                         # (Optional) Import an existing Hoop connection instead
+                                        #   of creating a new one. Default: false.
+  tags: {}                              # (Optional) Key/value tags applied to the Hoop connection.
+                                        #   Example: { env = "prod", team = "platform" }
+  access_control: []                    # (Optional) List of Hoop access-control group names.
+                                        #   Example: ["group-dba", "group-devs"]
+
+# ── Connection: direct ────────────────────────────────────────────────────────
+
+direct:
+  host: ""                              # (Required when azure.enabled=false and hoop.enabled=false)
+                                        #   MySQL server hostname or IP address.
+  port: 3306                            # (Optional) MySQL port. Default: 3306.
+  username: ""                          # (Required when direct mode) Admin username.
+  password: ""                          # (Required when direct mode) Admin password.
+  db_name: "mysql"                      # (Optional) Default database for the connection.
+                                        #   Default: "mysql".
+  server_name: ""                       # (Optional) Logical server name for Key Vault secret
+                                        #   metadata. Default: "".
+  tls: "true"                           # (Optional) TLS mode. Valid values: "true", "false",
+                                        #   "skip-verify". Default: "true".
+
+# ── Databases ─────────────────────────────────────────────────────────────────
+
+databases: {}
+# databases:
+#   <logical-key>:                      # (Required) Logical identifier for the database.
+#     name: ""                          # (Required) Actual MySQL database name.
+#     charset: "utf8mb4"               # (Optional) Character set. Default: "utf8mb4".
+#     collation: "utf8mb4_unicode_ci"  # (Optional) Collation. Default: "utf8mb4_unicode_ci".
+
+# ── Users ─────────────────────────────────────────────────────────────────────
+
+users: {}
+# users:
+#   <logical-key>:                      # (Required) Logical identifier for the user.
+#     username: ""                      # (Required) MySQL user name.
+#     host: "%"                         # (Optional) MySQL host restriction. Default: "%".
+#     databases: []                     # (Required) List of database names to grant access to.
+#     access: "owner"                   # (Optional) Privilege level:
+#                                       #   "owner"     → ALL privileges (default)
+#                                       #   "readwrite" → SELECT, INSERT, UPDATE, DELETE
+#                                       #   "readonly"  → SELECT only
+
+# ── Password management ────────────────────────────────────────────────────────
+
+password_rotation_period: ""            # (Optional) Password rotation period string used as a
+                                        #   keeper key in random_password resources. Changing this
+                                        #   value triggers a new password for all users on the
+                                        #   next apply. Example: "30d". Default: "".
+
+force_reset: false                      # (Optional) When set to true, forces a password reset for
+                                        #   all managed users on the next apply. Default: false.
