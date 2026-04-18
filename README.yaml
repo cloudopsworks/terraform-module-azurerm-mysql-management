@@ -1,37 +1,186 @@
-name: Terraform Transit Gateway Module
+name: Terraform Azure MySQL Management Module
 #logo: logo/logo.jpg
 badges:
   - name: Latest Release
-    image: https://img.shields.io/github/release/<owner/repo>.svg?style=for-the-badge
-    url: https://github.com/<owner/repo>/releases/latest
+    image: https://img.shields.io/github/release/cloudopsworks/terraform-module-azurerm-mysql-management.svg?style=for-the-badge
+    url: https://github.com/cloudopsworks/terraform-module-azurerm-mysql-management/releases/latest
   - name: Last Updated
-    image: https://img.shields.io/github/last-commit/<owner/repo>.svg?style=for-the-badge
-    url: https://github.com/<owner/repo>/commits
+    image: https://img.shields.io/github/last-commit/cloudopsworks/terraform-module-azurerm-mysql-management.svg?style=for-the-badge
+    url: https://github.com/cloudopsworks/terraform-module-azurerm-mysql-management/commits
 
 license: "APACHE2"
 
 copyrights:
   - name: "Cloud Ops Works LLC"
     url: "https://cloudopsworks.co"
-    year: "2026"
+    year: "2021"
 
-github_repo: <owner/repo>
+github_repo: cloudopsworks/terraform-module-azurerm-mysql-management
 
 description: |-
-  <description>
+  Terraform module for managing MySQL databases, users, and grants on an existing Azure MySQL
+  Flexible Server. Uses the `winebarrel/mysql` provider for database-level management and
+  stores all generated credentials as JSON secrets in Azure Key Vault. Supports three
+  connection modes: direct Azure Flexible Server lookup, Key Vault secret (JSON bundle),
+  and Hoop tunnel (enterprise or community). Hoop enterprise mode additionally stores
+  per-field connection secrets in Key Vault and produces a structured `hoop_connections`
+  output consumed by upstream Hoop provider modules.
 
-# Introduction to the project
 introduction: |-
-#  This is an introduction.
+  This module targets teams that need a fully declarative way to bootstrap MySQL databases
+  and service accounts on Azure MySQL Flexible Server as part of a Terragrunt stack.
 
-# How to use this project
+  Key capabilities:
+  - Creates one or more MySQL databases with configurable charset and collation.
+  - Creates `owner` (ALL), `readwrite` (SELECT/INSERT/UPDATE/DELETE), and `readonly` (SELECT)
+    users, each with a randomly generated 24-character password stored in Azure Key Vault.
+  - Supports password rotation via `password_rotation_period` keeper and `force_reset` flag.
+  - Three connection modes:
+      - **azure** — resolves the Flexible Server FQDN via the AzureRM data source, or reads
+        admin credentials from a pre-existing Key Vault secret (JSON bundle).
+      - **hoop** — routes through a local Hoop tunnel (community or enterprise).
+      - **direct** — plain host/port/username/password for non-Azure or testing scenarios.
+  - Enterprise Hoop mode writes per-field Key Vault secrets (host, port, user, pass, db) and
+    emits a `hoop_connections` output ready for the Hoop Terraform provider.
+
 usage: |-
+  ```hcl
+  # terragrunt.hcl
+  terraform {
+    source = "git::https://github.com/cloudopsworks/terraform-module-azurerm-mysql-management.git//?ref=v1.0.0"
+  }
 
-# Example usage
+  inputs = {
+    # ── Org / environment ────────────────────────────────────────────────────────
+    org = {
+      organization_name = "acme"
+      organization_unit = "platform"
+      environment_name  = "prod"
+      environment_type  = "production"
+    }
+    region   = "eastus2"
+    spoke_def = "01"
+
+    # ── Key Vault ────────────────────────────────────────────────────────────────
+    key_vault_name                = "kv-platform-prod"       # (Required) Key Vault name
+    key_vault_resource_group_name = "rg-platform-prod"       # (Required) Resource group
+
+    # ── Connection mode: Azure Flexible Server (direct lookup) ───────────────────
+    azure = {
+      enabled              = true              # (Optional) Default: false
+      from_secret          = false             # (Optional) Default: false
+      server_name          = "mysql-prod-01"   # (Required when enabled+!from_secret)
+      resource_group_name  = "rg-mysql-prod"   # (Optional)
+      admin_username       = "mysqladmin"       # (Optional) Default: "adminuser"
+      admin_password       = "S3cr3t!"         # (Optional)
+      db_name              = "mysql"            # (Optional) Default: "mysql"
+      sslmode              = "true"             # (Optional) Default: "true"
+    }
+
+    # ── Connection mode: credentials from Key Vault secret (JSON bundle) ─────────
+    # azure = {
+    #   enabled     = true
+    #   from_secret = true
+    #   secret_name = "mysql-admin-creds"      # (Required when from_secret=true)
+    # }
+
+    # ── Connection mode: Hoop tunnel ─────────────────────────────────────────────
+    # hoop = {
+    #   enabled        = true                  # (Optional) Default: false
+    #   community      = false                 # (Optional) Default: true (enterprise=false)
+    #   agent_id       = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"  # (Required for enterprise)
+    #   port           = 3307                  # (Optional) Default: 3307
+    #   db_name        = "mysql"               # (Optional) Default: "mysql"
+    #   server_name    = "mysql-prod-01"       # (Optional)
+    #   import         = false                 # (Optional) Default: false
+    #   tags           = { env = "prod" }      # (Optional)
+    #   access_control = ["group-dba"]         # (Optional)
+    # }
+
+    # ── Connection mode: direct ───────────────────────────────────────────────────
+    # direct = {
+    #   host        = "10.0.0.5"              # (Required)
+    #   port        = 3306                    # (Optional) Default: 3306
+    #   username    = "admin"                 # (Required)
+    #   password    = "S3cr3t!"              # (Required)
+    #   db_name     = "mysql"                 # (Optional) Default: "mysql"
+    #   server_name = "mysql-prod-01"         # (Optional)
+    #   tls         = "true"                  # (Optional) Default: "true"
+    # }
+
+    # ── Databases ─────────────────────────────────────────────────────────────────
+    databases = {
+      appdb = {
+        name      = "appdb"                   # (Required) Actual database name
+        charset   = "utf8mb4"                 # (Optional) Default: "utf8mb4"
+        collation = "utf8mb4_unicode_ci"      # (Optional) Default: "utf8mb4_unicode_ci"
+      }
+      reportdb = {
+        name = "reportdb"
+      }
+    }
+
+    # ── Users ─────────────────────────────────────────────────────────────────────
+    users = {
+      app_owner = {
+        username  = "appowner"                # (Required) MySQL user name
+        host      = "%"                       # (Optional) Default: "%"
+        databases = ["appdb"]                 # (Required) List of databases
+        access    = "owner"                   # (Optional) owner/readwrite/readonly. Default: "owner"
+      }
+      app_reader = {
+        username  = "appreader"
+        databases = ["appdb", "reportdb"]
+        access    = "readonly"
+      }
+      report_writer = {
+        username  = "reportwriter"
+        databases = ["reportdb"]
+        access    = "readwrite"
+      }
+    }
+
+    # ── Password management ───────────────────────────────────────────────────────
+    password_rotation_period = "30d"          # (Optional) Default: ""
+    force_reset              = false          # (Optional) Default: false
+  }
+  ```
+
 examples: |-
+  ### Minimal — Azure Flexible Server with owner user
 
-# How to get started quickly
+  ```hcl
+  inputs = {
+    org = { organization_name = "acme", organization_unit = "eng",
+            environment_name = "dev", environment_type = "development" }
+    region    = "eastus"
+    spoke_def = "01"
+
+    key_vault_name                = "kv-eng-dev"
+    key_vault_resource_group_name = "rg-eng-dev"
+
+    azure = {
+      enabled        = true
+      server_name    = "mysql-dev-01"
+      admin_username = "mysqladmin"
+      admin_password = "DevPass123!"
+    }
+
+    databases = { myapp = { name = "myapp" } }
+    users = {
+      myapp_owner = { username = "myappowner", databases = ["myapp"], access = "owner" }
+    }
+  }
+  ```
+
 quickstart: |-
+  1. Ensure the Azure MySQL Flexible Server exists and is reachable.
+  2. Ensure the Azure Key Vault exists and the Terraform principal has `Key Vault Secrets Officer` role.
+  3. Reference this module in your Terragrunt stack (see **Usage** above).
+  4. Run `terragrunt plan` to verify resources, then `terragrunt apply`.
+  5. Retrieve generated credentials from Key Vault secrets named
+     `<prefix>-mysql-<username>-creds` (JSON bundle with `host`, `port`, `username`,
+     `password`, `databases`, `server_name`).
 
 include:
   - "docs/targets.md"
