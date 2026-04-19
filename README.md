@@ -237,19 +237,19 @@ Available targets:
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.59 |
 | <a name="requirement_mysql"></a> [mysql](#requirement\_mysql) | ~> 1.10 |
 | <a name="requirement_random"></a> [random](#requirement\_random) | ~> 3.4 |
+| <a name="requirement_time"></a> [time](#requirement\_time) | ~> 0.13 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
-| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 4.69.0 |
-| <a name="provider_mysql"></a> [mysql](#provider\_mysql) | 1.10.6 |
-| <a name="provider_random"></a> [random](#provider\_random) | 3.8.1 |
+| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | ~> 4.59 |
 
 ## Modules
 
 | Name | Source | Version |
 |------|--------|---------|
+| <a name="module_db"></a> [db](#module\_db) | git::https://github.com/cloudopsworks/terraform-module-mysql-management.git | v1.0.0 |
 | <a name="module_tags"></a> [tags](#module\_tags) | cloudopsworks/tags/local | 1.0.9 |
 
 ## Resources
@@ -263,14 +263,6 @@ Available targets:
 | [azurerm_key_vault_secret.hoop_user](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_secret) | resource |
 | [azurerm_key_vault_secret.owner_credentials](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_secret) | resource |
 | [azurerm_key_vault_secret.user_credentials](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_secret) | resource |
-| [mysql_database.this](https://registry.terraform.io/providers/winebarrel/mysql/latest/docs/resources/database) | resource |
-| [mysql_grant.owner](https://registry.terraform.io/providers/winebarrel/mysql/latest/docs/resources/grant) | resource |
-| [mysql_grant.readonly](https://registry.terraform.io/providers/winebarrel/mysql/latest/docs/resources/grant) | resource |
-| [mysql_grant.readwrite](https://registry.terraform.io/providers/winebarrel/mysql/latest/docs/resources/grant) | resource |
-| [mysql_user.owner](https://registry.terraform.io/providers/winebarrel/mysql/latest/docs/resources/user) | resource |
-| [mysql_user.user](https://registry.terraform.io/providers/winebarrel/mysql/latest/docs/resources/user) | resource |
-| [random_password.owner](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/password) | resource |
-| [random_password.user](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/password) | resource |
 | [azurerm_key_vault.credentials](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/key_vault) | data source |
 | [azurerm_key_vault_secret.azure_creds](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/key_vault_secret) | data source |
 | [azurerm_mysql_flexible_server.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/mysql_flexible_server) | data source |
