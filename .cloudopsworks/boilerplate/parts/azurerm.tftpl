@@ -74,6 +74,19 @@ terraform {
       source  = "hashicorp/azurerm"
       version = "~> 4.59"
     }
+    mysql = {
+          source  = "winebarrel/mysql"
+          version = "~> 1.10"
+        }
+    random = {
+          source  = "hashicorp/random"
+          version = "~> 3.4"
+        }
+    time = {
+          source  = "hashicorp/time"
+          version = "~> 0.13"
+        }
+
   }
 }
 {{ end }}
