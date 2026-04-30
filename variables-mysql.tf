@@ -14,6 +14,8 @@
 #     host: "%"                      # (Optional) MySQL host. Default: "%"
 #     databases: ["mydb"]            # (Required) List of databases to grant access
 #     access: "owner"                # (Optional) owner/readwrite/readonly. Default: "owner"
+#     hoop:                             # (Optional) Per-user Hoop settings.
+#       access_control: []              # (Optional) Access control groups merged with hoop.access_control.
 variable "users" {
   description = "Map of MySQL users to create with their database assignments."
   type        = any
