@@ -17,7 +17,7 @@ locals {
 }
 
 module "db" {
-  source    = "git::https://github.com/cloudopsworks/terraform-module-mysql-management.git?ref=v1.0.0"
+  source    = "git::https://github.com/cloudopsworks/terraform-module-mysql-management.git?ref=v1.0.5"
   providers = { mysql = mysql }
 
   org        = var.org
