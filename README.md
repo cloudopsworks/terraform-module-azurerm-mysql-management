@@ -16,7 +16,7 @@
 
 
 Terraform module for managing MySQL databases, users, and grants on an existing Azure MySQL
-Flexible Server. Uses the `winebarrel/mysql` provider for database-level management and
+Flexible Server. Uses the maintained `petoju/mysql` provider for database-level management and
 stores all generated credentials as JSON secrets in Azure Key Vault. Supports three
 connection modes: direct Azure Flexible Server lookup, Key Vault secret (JSON bundle),
 and Hoop tunnel (enterprise or community). Hoop enterprise mode additionally stores
@@ -67,6 +67,26 @@ Key capabilities:
 - Enterprise Hoop mode writes per-field Key Vault secrets (host, port, user, pass, db) and
   emits a `hoop_connections` output ready for the Hoop Terraform provider.
 
+**Upgrading from v1.x**
+
+Version 2.0 standardizes this wrapper and its generic database-management dependency on
+`petoju/mysql`. Before the first v2.0 plan, back up state and replace the provider address:
+
+```shell
+tofu state replace-provider \
+  registry.opentofu.org/winebarrel/mysql \
+  registry.opentofu.org/petoju/mysql
+```
+
+```shell
+terraform state replace-provider \
+  registry.terraform.io/winebarrel/mysql \
+  registry.terraform.io/petoju/mysql
+```
+
+Use the provider addresses reported by `tofu providers` or `terraform providers`. The command
+updates state identity only and does not recreate the managed MySQL objects.
+
 ## Usage
 
 
@@ -77,7 +97,7 @@ Instead pin to the release tag (e.g. `?ref=vX.Y.Z`) of one of our [latest releas
 ```hcl
 # terragrunt.hcl
 terraform {
-  source = "git::https://github.com/cloudopsworks/terraform-module-azurerm-mysql-management.git//?ref=v1.0.0"
+  source = "git::https://github.com/cloudopsworks/terraform-module-azurerm-mysql-management.git//?ref=v2.0.0"
 }
 
 inputs = {
@@ -235,7 +255,7 @@ Available targets:
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.7 |
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.59 |
-| <a name="requirement_mysql"></a> [mysql](#requirement\_mysql) | ~> 1.10 |
+| <a name="requirement_mysql"></a> [mysql](#requirement\_mysql) | ~> 3.0 |
 | <a name="requirement_random"></a> [random](#requirement\_random) | ~> 3.4 |
 | <a name="requirement_time"></a> [time](#requirement\_time) | ~> 0.13 |
 
@@ -249,7 +269,7 @@ Available targets:
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_db"></a> [db](#module\_db) | git::https://github.com/cloudopsworks/terraform-module-mysql-management.git | v1.0.5 |
+| <a name="module_db"></a> [db](#module\_db) | git::https://github.com/cloudopsworks/terraform-module-mysql-management.git | v2.0.0 |
 | <a name="module_tags"></a> [tags](#module\_tags) | cloudopsworks/tags/local | 1.0.9 |
 
 ## Resources
