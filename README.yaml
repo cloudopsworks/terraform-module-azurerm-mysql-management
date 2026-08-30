@@ -19,7 +19,7 @@ github_repo: cloudopsworks/terraform-module-azurerm-mysql-management
 
 description: |-
   Terraform module for managing MySQL databases, users, and grants on an existing Azure MySQL
-  Flexible Server. Uses the `winebarrel/mysql` provider for database-level management and
+  Flexible Server. Uses the maintained `petoju/mysql` provider for database-level management and
   stores all generated credentials as JSON secrets in Azure Key Vault. Supports three
   connection modes: direct Azure Flexible Server lookup, Key Vault secret (JSON bundle),
   and Hoop tunnel (enterprise or community). Hoop enterprise mode additionally stores
@@ -43,11 +43,31 @@ introduction: |-
   - Enterprise Hoop mode writes per-field Key Vault secrets (host, port, user, pass, db) and
     emits a `hoop_connections` output ready for the Hoop Terraform provider.
 
+  **Upgrading from v1.x**
+
+  Version 2.0 standardizes this wrapper and its generic database-management dependency on
+  `petoju/mysql`. Before the first v2.0 plan, back up state and replace the provider address:
+
+  ```shell
+  tofu state replace-provider \
+    registry.opentofu.org/winebarrel/mysql \
+    registry.opentofu.org/petoju/mysql
+  ```
+
+  ```shell
+  terraform state replace-provider \
+    registry.terraform.io/winebarrel/mysql \
+    registry.terraform.io/petoju/mysql
+  ```
+
+  Use the provider addresses reported by `tofu providers` or `terraform providers`. The command
+  updates state identity only and does not recreate the managed MySQL objects.
+
 usage: |-
   ```hcl
   # terragrunt.hcl
   terraform {
-    source = "git::https://github.com/cloudopsworks/terraform-module-azurerm-mysql-management.git//?ref=v1.0.0"
+    source = "git::https://github.com/cloudopsworks/terraform-module-azurerm-mysql-management.git//?ref=v2.0.0"
   }
 
   inputs = {
